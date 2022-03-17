@@ -35,7 +35,6 @@ class SyncController {
         res.send(200, 'set');
         return next();
     }
-
 }
 
 module.exports = SyncController;

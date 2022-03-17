@@ -8,7 +8,7 @@ class AuthController {
 
     async login(req, res, next) {
         const { login, password } = req.body;
-        const user = await model.find({ login, password })
+        const user = await model.findOne({ login, password })
 
         if(user) {
             const token = jwt.sign({ login }, process.env.JWT_SECRET, {

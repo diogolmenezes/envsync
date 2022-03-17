@@ -4,8 +4,24 @@ class EnvSyncRest {
     constructor() {
     }
 
-    login(user, password) {
+    async login(login, password) {
+        const result = await fetch(`${process.env.API_HOST}/auth`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                login,
+                password,
+            })
+        });
+        
+        if(result.status === 201) {
+            const { jwt } = await result.json();
+            return jwt;
+        }
 
+        throw 'Forbiden!';
     }
 
     async get(project, environment) {
