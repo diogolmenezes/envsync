@@ -1,20 +1,46 @@
 const jwt = require('jsonwebtoken');
-const envModel = require('../models/env');
+const envModel = require('../models/environment');
 const { uuid } = require('uuidv4');
 const SecurityService = require('../sevices/security-service');
 
-class SyncController {
+class EnvironmentController {
     constructor() {
         this.security = new SecurityService();
+    }
+
+    async list(req, res, next) {
+        try {
+            // TODO: jogar auth pra fora
+            const auth = req.headers.authorization;
+            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
+            const { project } = req.params;
+            const envs = await envModel.find({ project })
+            
+            if(envs) {
+                res.send(200, envs);
+            }
+            else 
+                res.send(404);
+
+            return next();
+        }
+        catch(error) {
+            if(error.name === 'TokenExpiredError') {
+                res.send(403, error);
+            } else {
+                res.send(500, error);
+            }
+            return next();
+        }
     }
 
     async get(req, res, next) {
         try {
             // TODO: jogar auth pra fora
             const auth = req.headers.authorization;
-            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
+            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET);
             const { project, environment } = req.params;
-            const env = await envModel.findOne({ project, environment })
+            const env = await envModel.findOne({ project, environment });
             
             if(env) {
                 env.content = await this.security.decrypt(env.content);
@@ -45,9 +71,9 @@ class SyncController {
 
         if(env) {
             // store only 10 versions
-            if(env.history.length >= 10) env.history = [];
+            if(env.versions.length >= 10) env.versions = [];
 
-            env.history.push({
+            env.versions.push({
                 id: uuid(),
                 login: env.login,
                 project: env.project,
@@ -73,6 +99,8 @@ class SyncController {
         res.send(200, 'set');
         return next();
     }
+
+
 }
 
-module.exports = SyncController;
+module.exports = EnvironmentController;

@@ -1,13 +1,14 @@
 const AuthController = require('../controllers/auth-controller');
-const SyncController = require('../controllers/sync-controller');
+const EnvironmentController = require('../controllers/environment-controller');
 
-const auth = new AuthController();
-const sync = new SyncController();
+const authController = new AuthController();
+const envController = new EnvironmentController();
 
 module.exports = (express) => {
     const router = express.Router();
-    router.post('/auth', [], auth.login.bind(auth));
-    router.post('/sync', [], sync.set.bind(sync));
-    router.get('/sync/:project/:environment', [], sync.get.bind(sync));
+    router.post('/auth', [], authController.login.bind(authController));
+    router.post('/environments', [], envController.set.bind(envController));
+    router.get('/environments/:project', [], envController.list.bind(envController));
+    router.get('/environments/:project/:environment', [], envController.get.bind(envController));
     return router;
 }

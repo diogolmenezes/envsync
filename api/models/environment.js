@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
     content: Object,
     createdAt: Date,
     updatedAt: Date,
-    history: [Object]
+    versions: [Object]
 });
 
-module.exports = connection.model('Env', schema);
+module.exports = connection.model('Environment', schema);

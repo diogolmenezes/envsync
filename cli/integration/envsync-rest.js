@@ -24,9 +24,8 @@ class EnvSyncRest {
         throw 'Forbiden!';
     }
 
-    async get(token, project, environment) {
-        console.log('eee', environment)
-        const result = await fetch(`${process.env.API_HOST}/sync/${project}/${environment}`, {
+    async list(token, project) {
+        const result = await fetch(`${process.env.API_HOST}/environments/${project}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,22 +34,46 @@ class EnvSyncRest {
         });
 
         if(result.status === 403) {            
-            return result.json();
+            throw new Error('Forbiden');
         }
 
         if(result.status === 404) {
-            return 'I could not find this environment'
+            return undefined;
         }
 
         if(result.status === 200) {
             return result.json();
         }
 
-        return 'Ops! I cant sync your env file...';
+        throw new Error('Ops! I cant list environments!');
+    }
+
+    async get(token, project, environment) {
+        const result = await fetch(`${process.env.API_HOST}/environments/${project}/${environment}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if(result.status === 403) {            
+            throw new Error('Forbiden');
+        }
+
+        if(result.status === 404) {
+            return undefined;
+        }
+
+        if(result.status === 200) {
+            return result.json();
+        }
+
+        throw new Error('Ops! I cant get your env file...');
     }
 
     async set(token, project, environment, content) {
-        const result = await fetch(`${process.env.API_HOST}/sync`, {
+        const result = await fetch(`${process.env.API_HOST}/environments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -63,15 +86,15 @@ class EnvSyncRest {
             })
         });
 
-        if(result.status === 403) {
-            return result.json();
+        if(result.status === 403) {            
+            throw new Error('Forbiden');
         }
 
         if(result.status === 200) {
-            return `You env was synced ${project} - ${environment}`;
+            return undefined
         }
 
-        return 'Ops! I cant sync your env file...';
+        throw new Error('Ops! I cant set your env file...');
     }
 }
 
