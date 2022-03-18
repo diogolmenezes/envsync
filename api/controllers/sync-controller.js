@@ -1,37 +1,75 @@
 const jwt = require('jsonwebtoken');
 const envModel = require('../models/env');
+const { uuid } = require('uuidv4');
+const SecurityService = require('../sevices/security-service');
 
 class SyncController {
     constructor() {
+        this.security = new SecurityService();
     }
 
     async get(req, res, next) {
-         // TODO: jogar auth pra fora
-         const auth = req.headers.authorization;
-         const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
-         const { project, environment } = req.params;
- 
-         const env = await envModel.findOne({ project, environment })
- 
-         res.send(200, env);
-         return next();
+        try {
+            // TODO: jogar auth pra fora
+            const auth = req.headers.authorization;
+            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
+            const { project, environment } = req.params;
+            const env = await envModel.findOne({ project, environment })
+            
+            if(env) {
+                env.content = await this.security.decrypt(env.content);
+                res.send(200, env);
+            }
+            else 
+                res.send(404);
+
+            return next();
+        }
+        catch(error) {
+            if(error.name === 'TokenExpiredError') {
+                res.send(403, error);
+            } else {
+                res.send(500, error);
+            }
+            return next();
+        }
     }
 
     async set(req, res, next) {
         // TODO: jogar auth pra fora
         const auth = req.headers.authorization;
-        const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
+        const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET);
         const { project, environment, content } = req.body;
+        const secureContent = await this.security.encrypt(content);
+        const env = await envModel.findOne({ project, environment });
 
-        envModel.create({
-            login,
-            project,
-            environment, 
-            content: JSON.stringify(content),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        })
+        if(env) {
+            // store only 10 versions
+            if(env.history.length >= 10) env.history = [];
 
+            env.history.push({
+                id: uuid(),
+                login: env.login,
+                project: env.project,
+                environment: env.environment,
+                content: env.content,
+                createdAt: env.createdAt,
+                updatedAt: env.updatedAt,
+            })
+            env.login = login;
+            env.content = secureContent;
+            env.updatedAt = new Date(),
+            env.save();
+        } else {
+            envModel.create({
+                login,
+                project,
+                environment, 
+                content: secureContent,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })
+        }
         res.send(200, 'set');
         return next();
     }

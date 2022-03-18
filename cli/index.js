@@ -3,6 +3,22 @@ const { program } = require('commander');
 const rest = require('./integration/envsync-rest');
 const fs = require('fs');
 
+getToken = () => {
+    return  fs.readFileSync('.envsync', 'utf8')
+}
+
+getEnvPath = (environment) => {
+    return !environment || environment === 'default' ? '.env' : `.env.${environment}`;
+}
+
+getEnvFile = (environment) => {
+    return fs.readFileSync(getEnvPath(environment), 'utf8');
+}
+
+setEnvFile = (environment, content) => {
+    return fs.writeFileSync(getEnvPath(environment), content);
+}
+
 program
     .name('envsync')
     .description('CLI to sync env files')
@@ -11,12 +27,13 @@ program
 program
     .command('login')
     .description('Login')
-    .argument('<login>', 'string to split')
-    .argument('<password>', 'string to split')
+    .argument('<login>', 'your username')
+    .argument('<password>', 'your password')
     .action(async (login, password) => {
         try{
             const jwt = await rest.login(login, password)
-            fs.writeFile('.envsync',jwt, () => console.log('You are in!'));
+            fs.writeFileSync('.envsync',jwt);
+            console.log('You are in!')
         }
         catch(error) {
             console.log('Forbiden!');
@@ -27,24 +44,29 @@ program
 program
     .command('get')
     .description('Get env file')
-    .argument('<project>', 'string to split')
-    .argument('<environment>', 'string to split')
+    .argument('<project>', 'Name of the project')
+    .argument('[environment]', 'Environment of env file')
     .action(async (project, environment) => {
-        console.log(project, environment);
-        const result = await rest.get(project, environment)
-        console.log(result)
+        const token = getToken();
+        const result = await rest.get(token, project, environment || 'production')
+        console.log(`Loading [${result.project}] [${result.environment}] environment`);
+        console.log(`Last Author [${result.login}] at [${result.updatedAt}]`);
+        setEnvFile(environment, result.content);
+        console.log('Done! You are up to date!');
     })
 
 program
     .command('set')
     .description('Upload a new envFile')
-    .argument('<project>', 'string to split')
-    .argument('<environment>', 'string to split')
-    .argument('<content>', 'string to split')
-    .action(async (project, environment, content) => {
-        console.log(project, environment, content);
-        const result = await rest.set(project, environment, content)
+    .argument('<project>', 'Name of the project')
+    .argument('[environment]', 'Environment of env file')
+    .action(async (project, environment) => {
+        const token   = getToken();
+        const content = getEnvFile(environment)
+        const result  = await rest.set(token, project, environment || 'production', content)
         console.log(result)
     })
 
 program.parse();
+
+

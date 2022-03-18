@@ -6,8 +6,8 @@ const sync = new SyncController();
 
 module.exports = (express) => {
     const router = express.Router();
-    router.post('/auth', [], auth.login);
-    router.post('/sync', [], sync.set);
-    router.get('/sync/:project/:environment', [], sync.get);
+    router.post('/auth', [], auth.login.bind(auth));
+    router.post('/sync', [], sync.set.bind(sync));
+    router.get('/sync/:project/:environment', [], sync.get.bind(sync));
     return router;
 }

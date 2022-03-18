@@ -11,6 +11,7 @@
   "dependencies": {
     "commander": "^9.0.0",
     "dotenv": "^16.0.0",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "uuidv4": "^6.2.12"
   }
 }
