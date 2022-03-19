@@ -3,9 +3,10 @@ const { program } = require('commander');
 const rest = require('./integration/envsync-rest');
 const fs = require('fs');
 
-getToken = () => {
+getEnvsync = () => {
     try {
-        return fs.readFileSync('.envsync', 'utf8')
+        const content = fs.readFileSync('.envsync', 'utf8');
+        return JSON.parse(content);
     } catch (error) {
         throw new Error(`You are not logged in`);
     }
@@ -45,11 +46,15 @@ program
     .action(async (login, password) => {
         try {
             const jwt = await rest.login(login, password)
-            fs.writeFileSync('.envsync', jwt);
+            
+            fs.writeFileSync('.envsync', JSON.stringify({
+                host: undefined,
+                token: jwt
+            }));
             console.log('You are in!')
         }
         catch (error) {
-            console.log('Forbiden!');
+            console.log('Forbiden!', error);
         }
     })
 
@@ -59,7 +64,7 @@ program
     .argument('<project>', 'Name of the project')
     .action(async (project, environment) => {
         try {
-            const token = getToken();
+            const { token } = getEnvsync();
             const environments = await rest.list(token, project)
             if(environments) {
                 console.log(`Listing [${environments.length}] environments for [${project}]...`);
@@ -82,7 +87,7 @@ program
     .argument('[environment]', 'Environment of env file')
     .action(async (project, environment) => {
         try {
-            const token = getToken();
+            const { token } = getEnvsync();
             const result = await rest.get(token, project, environment || 'production')
             if(result) {
                 console.log(`Loading [${result.project}] [${result.environment}] environment ...`);
@@ -105,7 +110,7 @@ program
     .argument('[environment]', 'Environment of env file')
     .action(async (project, environment) => {
         try {
-            const token = getToken();
+            const { token } = getEnvsync();
             const content = getEnvFile(environment)
             await rest.set(token, project, environment || 'production', content)
             console.log(`Uploading environment [${project}] [${environment || 'production'}]...`);

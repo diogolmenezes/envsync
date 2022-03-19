@@ -1,11 +1,12 @@
 const fetch = require('node-fetch');
 
 class EnvSyncRest {
-    constructor() {
+    constructor(apiHost) {
+        this.apiHost = apiHost || process.env.API_HOST;
     }
 
     async login(login, password) {
-        const result = await fetch(`${process.env.API_HOST}/auth`, {
+        const result = await fetch(`${this.apiHost}/auth`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -25,7 +26,7 @@ class EnvSyncRest {
     }
 
     async list(token, project) {
-        const result = await fetch(`${process.env.API_HOST}/environments/${project}`, {
+        const result = await fetch(`${this.apiHost}/environments/${project}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +50,7 @@ class EnvSyncRest {
     }
 
     async get(token, project, environment) {
-        const result = await fetch(`${process.env.API_HOST}/environments/${project}/${environment}`, {
+        const result = await fetch(`${this.apiHost}/environments/${project}/${environment}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ class EnvSyncRest {
     }
 
     async set(token, project, environment, content) {
-        const result = await fetch(`${process.env.API_HOST}/environments`, {
+        const result = await fetch(`${this.apiHost}/environments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
