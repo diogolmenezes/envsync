@@ -1,16 +1,8 @@
+#!/usr/bin/env node
 require('dotenv').config()
 const { program } = require('commander');
-const rest = require('./integration/envsync-rest');
+const rest = require('./integration/securenv-rest');
 const fs = require('fs');
-
-getEnvsync = () => {
-    try {
-        const content = fs.readFileSync('.envsync', 'utf8');
-        return JSON.parse(content);
-    } catch (error) {
-        throw new Error(`You are not logged in`);
-    }
-}
 
 getEnvPath = (environment) => {
     return !environment || environment === 'default' ? '.env' : `.env.${environment}`;
@@ -34,23 +26,20 @@ setEnvFile = (environment, content) => {
 }
 
 program
-    .name('envsync')
+    .name('securenv')
     .description('CLI to sync env files')
-    .version('0.0.1');
+    .version('1.0.2');
 
 program
     .command('login')
     .description('Login')
     .argument('<login>', 'your username')
     .argument('<password>', 'your password')
-    .action(async (login, password) => {
+    .argument('[host]', 'securenv host')
+    .action(async (login, password, host) => {
         try {
-            const jwt = await rest.login(login, password)
-            
-            fs.writeFileSync('.envsync', JSON.stringify({
-                host: undefined,
-                token: jwt
-            }));
+            const config = await rest.login(host, login, password)        
+            fs.writeFileSync('.securenv', JSON.stringify(config));
             console.log('You are in!')
         }
         catch (error) {
@@ -64,13 +53,20 @@ program
     .argument('<project>', 'Name of the project')
     .action(async (project, environment) => {
         try {
-            const { token } = getEnvsync();
-            const environments = await rest.list(token, project)
+            const environments = await rest.list(project)
             if(environments) {
                 console.log(`Listing [${environments.length}] environments for [${project}]...`);
                 environments.map(env => {
-                    console.log(`=> PROJECT ${env.project} ENVIRONMENT ${env.environment} AUTHOR ${env.login} UPDATED AT ${env.updatedAt} VERSIONS ${env.versions.length+1}`);
-                })
+                    console.log(`=>  ${env.project.toUpperCase()} at ${env.environment} has ${env.versions.length+1} version(s):`);
+                    console.log('');
+                    console.log(`   - CURRENT by ${env.login} updated at ${env.updatedAt}`);
+                    env.versions.map(version => {
+                        console.log(`   - ${version.id} by ${env.login} updated at ${env.updatedAt}`);
+                    });
+                    console.log('');
+                    console.log('');
+                });
+                console.log('If you need to get an specific vesion, just do: securenv get [project] [env] [version-id]')
             } else {
                 console.log(`This environment does not exists yet [${project}] [${environment || 'production'}]`);
             }
@@ -85,17 +81,18 @@ program
     .description('Get environment file')
     .argument('<project>', 'Name of the project')
     .argument('[environment]', 'Environment of env file')
-    .action(async (project, environment) => {
+    .argument('[versionId]', 'Id of an version')
+    .action(async (project, environment, versionId) => {
         try {
-            const { token } = getEnvsync();
-            const result = await rest.get(token, project, environment || 'production')
+            const result = await rest.get(project, environment || 'production', versionId)
             if(result) {
-                console.log(`Loading [${result.project}] [${result.environment}] environment ...`);
-                console.log(`Last Author [${result.login}] at [${result.updatedAt}]`);
+                console.log(`Loading [${result.project}] [${result.environment}] [${versionId || 'current'}] ...`);
+                console.log(`Author [${result.login}] at [${result.updatedAt}]`);
+                console.log('env', result.content)
                 setEnvFile(environment, result.content);
                 console.log('Done! You are up to date!');
             } else {
-                console.log(`This environment does not exists yet [${project}] [${environment || 'production'}]`);
+                console.log(`This environment/version does not exists yet [${project}] [${environment || 'production'}] [${versionId || 'current'}]`);
             }
         }
         catch (error) {
@@ -110,9 +107,8 @@ program
     .argument('[environment]', 'Environment of env file')
     .action(async (project, environment) => {
         try {
-            const { token } = getEnvsync();
             const content = getEnvFile(environment)
-            await rest.set(token, project, environment || 'production', content)
+            await rest.set(project, environment || 'production', content)
             console.log(`Uploading environment [${project}] [${environment || 'production'}]...`);
             console.log('Done! Your environment was uploaded!');
         }

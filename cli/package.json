@@ -1,13 +1,10 @@
 {
-  "name": "envsync",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "securenv",
+  "version": "1.0.4",
+  "description": "Securenv its a CLI for securenv API that stores and gets secure env files",
+  "bin": {
+    "securenv": "./index.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "commander": "^9.0.0",
     "dotenv": "^16.0.0",

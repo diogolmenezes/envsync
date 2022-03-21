@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken');
 const envModel = require('../models/environment');
 const { uuid } = require('uuidv4');
 const SecurityService = require('../sevices/security-service');
@@ -10,13 +9,15 @@ class EnvironmentController {
 
     async list(req, res, next) {
         try {
-            // TODO: jogar auth pra fora
-            const auth = req.headers.authorization;
-            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET)
             const { project } = req.params;
             const envs = await envModel.find({ project })
             
             if(envs) {
+                
+                // remove the content of the env from the list
+                delete env.content;
+                env.versions.map(version => delete version.content)
+                
                 res.send(200, envs);
             }
             else 
@@ -36,14 +37,14 @@ class EnvironmentController {
 
     async get(req, res, next) {
         try {
-            // TODO: jogar auth pra fora
-            const auth = req.headers.authorization;
-            const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET);
             const { project, environment } = req.params;
             const env = await envModel.findOne({ project, environment });
             
             if(env) {
                 env.content = await this.security.decrypt(env.content);
+                for(let i = 0; i < env.versions.length; i++) {
+                    env.versions[i].content = await this.security.decrypt(env.versions[i].content);
+                }
                 res.send(200, env);
             }
             else 
@@ -62,10 +63,8 @@ class EnvironmentController {
     }
 
     async set(req, res, next) {
-        // TODO: jogar auth pra fora
-        const auth = req.headers.authorization;
-        const { login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET);
-        const { project, environment, content } = req.body;
+        const { project, environment } = req.params;
+        const { content } = req.body;
         const secureContent = await this.security.encrypt(content);
         const env = await envModel.findOne({ project, environment });
 
