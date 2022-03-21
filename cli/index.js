@@ -28,7 +28,7 @@ setEnvFile = (environment, content) => {
 program
     .name('securenv')
     .description('CLI to sync env files')
-    .version('1.0.2');
+    .version('1.0.5');
 
 program
     .command('login')

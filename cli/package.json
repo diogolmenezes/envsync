@@ -1,6 +1,6 @@
 {
   "name": "securenv",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Securenv its a CLI for securenv API that stores and gets secure env files",
   "bin": {
     "securenv": "./index.js"
