@@ -1,6 +1,6 @@
 # Securenv
 
-This is a CLI for securenv API where you can upload your env files to share you your team from a secure way.
+This is a CLI for securenv API where you can upload your env files to a vault and share you your team from a secure way.
 
 
 # Get started
