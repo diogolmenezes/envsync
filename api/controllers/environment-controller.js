@@ -12,12 +12,12 @@ class EnvironmentController {
             const { project } = req.params;
             const envs = await envModel.find({ project })
             
-            if(envs) {
-                
-                // remove the content of the env from the list
-                delete env.content;
-                env.versions.map(version => delete version.content)
-                
+            if(envs) {                
+                envs.map(env => {
+                    // remove the content of the env from the list
+                    delete env.content;
+                    env.versions.map(version => delete version.content)
+                });
                 res.send(200, envs);
             }
             else 
@@ -65,8 +65,10 @@ class EnvironmentController {
     async set(req, res, next) {
         const { project, environment } = req.params;
         const { content } = req.body;
+        const { login } = req.user
         const secureContent = await this.security.encrypt(content);
         const env = await envModel.findOne({ project, environment });
+        req.user
 
         if(env) {
             // store only 10 versions

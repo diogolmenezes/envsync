@@ -8,7 +8,8 @@ class SecurenvRest {
 
     getConfiguration() {
         try {
-            const content = fs.readFileSync(`${__dirname}/../.securenv`, 'utf8');
+            const path = `${__dirname}/../.securenv`;
+            const content = fs.readFileSync(path, 'utf8');
             return JSON.parse(content);
         } catch (error) {
             throw new Error('We cant get the configuration file, you must log in!', error);
@@ -103,15 +104,13 @@ class SecurenvRest {
 
     async set(project, environment, content) {
         const config = this.getConfiguration();
-        const result = await fetch(`${config.host}/environments`, {
+        const result = await fetch(`${config.host}/environments/${project}/${environment}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${config.jwt}`
             },
             body: JSON.stringify({
-                project,
-                environment,
                 content
             })
         });
@@ -125,6 +124,7 @@ class SecurenvRest {
             return undefined
         }
 
+        console.log(result)
         throw new Error('Ops! I cant set your env file...');
     }
 }

@@ -14,8 +14,10 @@ class AuthController {
             const { id, login } = jwt.verify(auth.split(' ').pop(), process.env.JWT_SECRET);
             const user = await model.findById(id).lean();
             const { project, environment } = req.params;
-            req.user = user;
-            if(user.projects.find(p=> p.project === project && p.environment === environment)) {
+            const canViewEnvironment = user.projects.find(p=> p.project === project && (p.environment === environment || !environment ));
+            
+            if(canViewEnvironment) {
+                req.user = user;
                 return next();
             } else {
                 res.status(403).send('Forbiden! This user cant view this project/environment!');
@@ -29,8 +31,8 @@ class AuthController {
     async login(req, res, next) {
         const { login, password } = req.body;
         const user = await model.findOne({ login });
-        const unsecurePass = await this.security.decrypt(user.password);
-        if(user && unsecurePass === password) {
+        const encryptedPass = await this.security.encrypt(password);
+        if(user && await this.security.decrypt(user.password) === password) {
             const token = jwt.sign({ id: user.id, login}, process.env.JWT_SECRET, {
                 expiresIn: '1h'
             });
@@ -40,8 +42,6 @@ class AuthController {
             res.send(403, 'Forbidden')
         }
     }
-
-    
 }
 
 module.exports = AuthController;

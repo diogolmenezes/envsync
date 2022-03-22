@@ -28,7 +28,7 @@ setEnvFile = (environment, content) => {
 program
     .name('securenv')
     .description('CLI to sync env files')
-    .version('1.0.5');
+    .version('1.0.10');
 
 program
     .command('login')
@@ -39,7 +39,7 @@ program
     .action(async (login, password, host) => {
         try {
             const config = await rest.login(host, login, password)        
-            fs.writeFileSync('.securenv', JSON.stringify(config));
+            fs.writeFileSync(`${__dirname}/.securenv`, JSON.stringify(config));
             console.log('You are in!')
         }
         catch (error) {
@@ -88,7 +88,6 @@ program
             if(result) {
                 console.log(`Loading [${result.project}] [${result.environment}] [${versionId || 'current'}] ...`);
                 console.log(`Author [${result.login}] at [${result.updatedAt}]`);
-                console.log('env', result.content)
                 setEnvFile(environment, result.content);
                 console.log('Done! You are up to date!');
             } else {

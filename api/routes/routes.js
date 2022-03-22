@@ -8,8 +8,8 @@ const envController = new EnvironmentController();
 module.exports = (express) => {
     const router = express.Router();
     router.post('/auth', [], authController.login.bind(authController));
-    router.post('/environments/:project/:environment', [authController.authMiddleware], envController.set.bind(envController));
     router.get('/environments/:project', [authController.authMiddleware], envController.list.bind(envController));
+    router.post('/environments/:project/:environment', [authController.authMiddleware], envController.set.bind(envController));
     router.get('/environments/:project/:environment', [authController.authMiddleware], envController.get.bind(envController));
     return router;
 }

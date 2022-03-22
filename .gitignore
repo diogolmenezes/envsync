@@ -2,3 +2,4 @@ node_modules
 .env
 .securenv
 .env*
+.DS_Store
