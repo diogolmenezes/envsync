@@ -111,8 +111,9 @@ program
             if(result) {
                 console.log(`Loading [${result.project}] [${result.environment}] [${versionId || 'current'}] ...`);
                 console.log(`Author [${result.login}] at [${result.updatedAt}]`);
+                console.log('\n----------------------\n')
                 console.log(result.content)
-                console.log('Done! You are up to date!');
+                console.log('\n----------------------\n')
             } else {
                 console.log(`This environment/version does not exists yet [${project}] [${environment || 'production'}] [${versionId || 'current'}]`);
             }
