@@ -100,6 +100,30 @@ program
     });
 
 program
+    .command('cat')
+    .description('Cat environment file')
+    .argument('<project>', 'Name of the project')
+    .argument('[environment]', 'Environment of env file')
+    .argument('[versionId]', 'Id of an version')
+    .action(async (project, environment, versionId) => {
+        try {
+            const result = await rest.get(project, environment || 'production', versionId)
+            if(result) {
+                console.log(`Loading [${result.project}] [${result.environment}] [${versionId || 'current'}] ...`);
+                console.log(`Author [${result.login}] at [${result.updatedAt}]`);
+                console.log('\n----------------------\n')
+                console.log(result.content)
+                console.log('\n----------------------\n')
+            } else {
+                console.log(`This environment/version does not exists yet [${project}] [${environment || 'production'}] [${versionId || 'current'}]`);
+            }
+        }
+        catch (error) {
+            console.log(error.message);
+        }
+    });
+
+program
     .command('set')
     .description('Upload a new environment')
     .argument('<project>', 'Name of the project')
